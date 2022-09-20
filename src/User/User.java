@@ -19,7 +19,7 @@ public class User{
 
 			NAME = fromUser.readLine();
 
-			SendMessage sender = new SendMessage(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
+			SendMessage sender = new SendMessage(args[0], Integer.parseInt(args[1]));
 
 			sender.start();
 		}catch(Exception mess){
@@ -33,7 +33,6 @@ class SendMessage extends Thread{
 	
 	private int serverPort;
 
-	private int myPort;
 
 	private DatagramSocket clientSocket;
 
@@ -43,13 +42,15 @@ class SendMessage extends Thread{
 
 	private String sentence;
 
+	private String address;
+	
 	private DatagramPacket packet;
 
-	public SendMessage(int myPort, int serverPort){
+	public SendMessage(String address, int serverPort){
 		
 		this.serverPort = serverPort;
 		
-		this.myPort = myPort;
+		this.address = address;
 
 	
 	}
@@ -74,13 +75,13 @@ class SendMessage extends Thread{
 		
 		System.out.println("If you want to leave the chat, enter end conversation");
 		
-		clientSocket = new DatagramSocket(myPort);
+		clientSocket = new DatagramSocket();
 		
-		Receiver receiver = new Receiver(myPort, clientSocket);
+		Receiver receiver = new Receiver(clientSocket);
 		
 		receiver.start();
 		
-		ipAddressSend = InetAddress.getByName("localhost");
+		ipAddressSend = InetAddress.getByName(address);
 			while(User.onChat){
 				sentence = messageSend();
 				
@@ -97,7 +98,7 @@ class SendMessage extends Thread{
 			Thread.sleep(100);
 		}catch(Exception mess){
 			System.out.println(mess.getMessage());
-			clientSocket.close();
+			//clientSocket.close();
 		}finally{
 			
 			clientSocket.close();
@@ -112,14 +113,14 @@ class Receiver extends Thread {
 	
 	private byte[] receiveData;
 
-	private int portListen;
+	
 
-	public Receiver(int port, DatagramSocket client){
+	public Receiver(DatagramSocket client){
 		super();
 		
 		this.client = client;
 		
-		portListen = port;
+		
 	}
 	
 	public void run() {
@@ -139,7 +140,7 @@ class Receiver extends Thread {
 	
 	}catch(Exception exc) {
 		System.out.println(exc.getMessage());
-		client.close();
+		//client.close();
 	}finally {
 		client.close();
 
