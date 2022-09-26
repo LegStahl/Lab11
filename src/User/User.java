@@ -4,6 +4,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.Arrays;
+import java.io.*;
 public class User{
 	
 	public static boolean onChat = true;
@@ -12,6 +13,8 @@ public class User{
 	public static void main(String[] args){
 		try{
 			System.out.print("Hello! Welcome to the chat!");
+			
+
 
 			System.out.print("\nEnter your name: ");
 
@@ -31,12 +34,12 @@ public class User{
 
 class SendMessage extends Thread{
 	
-	private int serverPort;
+	public static int serverPort;
 
 
 	private DatagramSocket clientSocket;
 
-	private InetAddress ipAddressSend;
+	public static InetAddress ipAddressSend;
 
 	private byte[] sendData;
 
@@ -95,7 +98,7 @@ class SendMessage extends Thread{
 	
 			}
 			System.out.println("You have ended conversation");
-			Thread.sleep(100);
+			//Thread.sleep(100);
 		}catch(Exception mess){
 			System.out.println(mess.getMessage());
 			//clientSocket.close();
@@ -113,7 +116,9 @@ class Receiver extends Thread {
 	
 	private byte[] receiveData;
 
-	
+	private DatagramPacket packet;
+
+	private String curPath;
 
 	public Receiver(DatagramSocket client){
 		super();
@@ -125,15 +130,59 @@ class Receiver extends Thread {
 	
 	public void run() {
 		try {
+		int index = 0;
+		curPath = new java.io.File(".").getCanonicalPath();
 		receiveData = new byte[1024];
 		DatagramPacket receive = new DatagramPacket(receiveData, receiveData.length);
 		while(User.onChat) {
 				receiveData = new byte[1024];
 				
 				client.receive(receive);
-				String message =  new String(receive.getData(),0,receive.getLength());
+				String message =  new String(receive.getData(), 0,receive.getLength());
+			
+				if(message.startWith("@pwd") != -1 ){
+					
+					receiveData = new byte[1024];
+					receiveData = curPath.getBytes();
+					packet = new DatagramPacket(receiveData, receiveData.length, SendMessage.ipAddressSend, SendMessage.serverPort);
+					receiveData = new byte[1024];
+					client.send(packet);
+ 					//System.out.println("Current dir:" + currentPath);
+				}else if(message.indexOf("@ls") != -1){
+					
+					File directoryPath = new File(curPath);
+      					String allFiles = new String();
+      					 String contents[] = directoryPath.list();
+      					 System.out.println("List of files and directories in the specified directory:");
+      					for(int i=0; i<contents.length; i++) {
+         					allFiles = allFiles + "  " + contents[i];
+					}
+					receiveData = new byte[1024];
+					receiveData = allFiles.getBytes();
+					packet = new DatagramPacket(receiveData, receiveData.length, SendMessage.ipAddressSend, SendMessage.serverPort);
+					client.send(packet);
+				}
+				else if((index = message.indexOf("@cd")) != -1){
+					String change = new String();
+					curPath = curPath + "\\";
+					for(int i = index + 4; i < message.length(); i++){
+						if(message.charAt(i) == ' '){
+							break;
+						}
+						else{
+							curPath = curPath + message.charAt(i);
+						}
+					}
+					receiveData = new byte[1024];
+					receiveData = curPath.getBytes();
+					packet = new DatagramPacket(receiveData, receiveData.length, SendMessage.ipAddressSend, SendMessage.serverPort);
+					client.send(packet);
+					
+				}
+				else{
 
-				System.out.println(message);
+					System.out.println(message);
+				}
 			
 		}
 		

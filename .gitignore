@@ -1,9 +1,0 @@
-bin
-.settings
-.classpath
-.project
-src/Server/com
-src/User/com
-src/User/Receiver.class
-src/User/SendMessage.class
-src/User/User.class
